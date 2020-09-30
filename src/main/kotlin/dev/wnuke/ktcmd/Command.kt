@@ -1,6 +1,11 @@
 package dev.wnuke.ktcmd
 
-open class Command<T : Call>(val name: String, val description: String = "", val aliases: ArrayList<String> = ArrayList(), val runs: (Call) -> Unit) {
+open class Command<T : Call>(
+    val name: String,
+    val description: String = "",
+    val aliases: ArrayList<String> = ArrayList(),
+    val runs: (Call) -> Unit
+) {
     val arguments = HashMap<String, Argument<*>>()
     val requiredArguments = HashSet<String>()
     val parsedArguments = HashMap<String, Any?>()
@@ -13,31 +18,61 @@ open class Command<T : Call>(val name: String, val description: String = "", val
         manager.addCommand(this)
     }
 
-    fun string(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (String) -> Unit = {}): Command<T> {
+    fun string(
+        name: String,
+        required: Boolean = true,
+        description: String = "",
+        shortName: String = "",
+        runs: (String) -> Unit = {}
+    ): Command<T> {
         arguments[name] = StringArgument(name, description, runs, shortName)
         if (required) requiredArguments.add(name)
         return this
     }
 
-    fun integer(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (Int) -> Unit = {}): Command<T> {
+    fun integer(
+        name: String,
+        required: Boolean = true,
+        description: String = "",
+        shortName: String = "",
+        runs: (Int) -> Unit = {}
+    ): Command<T> {
         arguments[name] = IntArgument(name, description, runs, shortName)
         if (required) requiredArguments.add(name)
         return this
     }
 
-    fun long(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (Long) -> Unit = {}): Command<T> {
+    fun long(
+        name: String,
+        required: Boolean = true,
+        description: String = "",
+        shortName: String = "",
+        runs: (Long) -> Unit = {}
+    ): Command<T> {
         arguments[name] = LongArgument(name, description, runs, shortName)
         if (required) requiredArguments.add(name)
         return this
     }
 
-    fun float(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (Float) -> Unit = {}): Command<T> {
+    fun float(
+        name: String,
+        required: Boolean = true,
+        description: String = "",
+        shortName: String = "",
+        runs: (Float) -> Unit = {}
+    ): Command<T> {
         arguments[name] = FloatArgument(name, description, runs, shortName)
         if (required) requiredArguments.add(name)
         return this
     }
 
-    fun double(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (Double) -> Unit = {}): Command<T> {
+    fun double(
+        name: String,
+        required: Boolean = true,
+        description: String = "",
+        shortName: String = "",
+        runs: (Double) -> Unit = {}
+    ): Command<T> {
         arguments[name] = DoubleArgument(name, description, runs, shortName)
         if (required) requiredArguments.add(name)
         return this

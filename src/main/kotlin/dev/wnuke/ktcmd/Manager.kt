@@ -13,7 +13,8 @@ class CommandManager<T : Call>(val prefix: String = "") {
         }
     }
 
-    fun listCommands() = "Available Commands: ${commands.entries.joinToString(separator = "") { "\n - ${it.key}${if (it.value.description.isNotEmpty()) ": ${it.value.description}" else ""}" }}"
+    fun listCommands() =
+        "Available Commands: ${commands.entries.joinToString(separator = "") { "\n - ${it.key}${if (it.value.description.isNotEmpty()) ": ${it.value.description}" else ""}" }}"
 
     fun runCommand(commandString: String, call: T) {
         for (command in commands.values) {
