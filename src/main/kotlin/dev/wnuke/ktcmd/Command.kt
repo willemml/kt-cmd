@@ -9,10 +9,6 @@ open class Command<T : Call>(val name: String, val description: String = "", val
         aliases.add(name)
     }
 
-    fun addToManager(manager: CommandManager<T>) {
-        manager.addCommand(this)
-    }
-
     fun string(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (String) -> Unit = {}): Command<T> {
         arguments[name] = StringArgument(name, description, runs, shortName)
         if (required) requiredArguments.add(name)
