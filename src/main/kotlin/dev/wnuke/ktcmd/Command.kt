@@ -6,9 +6,7 @@ open class Command<T : Call>(
     val aliases: ArrayList<String> = ArrayList(),
     val runs: Command<T>.(T) -> Unit
 ) {
-    val arguments = HashMap<String, Argument<*, T>>()
-    val requiredArguments = HashSet<String>()
-    val parsedArguments = HashMap<String, Any?>()
+    var arguments = HashMap<String, Triple<Argument<*, T>, Boolean, Any?>>()
 
     init {
         aliases.add(name)
@@ -25,8 +23,7 @@ open class Command<T : Call>(
         shortName: String = "",
         runs: T.(String) -> Unit = {}
     ): Command<T> {
-        arguments[name] = StringArgument(name, description, runs, shortName)
-        if (required) requiredArguments.add(name)
+        arguments[name] = Triple(StringArgument(name, description, runs, shortName), required, null)
         return this
     }
 
@@ -37,8 +34,7 @@ open class Command<T : Call>(
         shortName: String = "",
         runs: T.(Int) -> Unit = {}
     ): Command<T> {
-        arguments[name] = IntArgument(name, description, runs, shortName)
-        if (required) requiredArguments.add(name)
+        arguments[name] = Triple(IntArgument(name, description, runs, shortName), required, null)
         return this
     }
 
@@ -49,8 +45,7 @@ open class Command<T : Call>(
         shortName: String = "",
         runs: T.(Long) -> Unit = {}
     ): Command<T> {
-        arguments[name] = LongArgument(name, description, runs, shortName)
-        if (required) requiredArguments.add(name)
+        arguments[name] = Triple(LongArgument(name, description, runs, shortName), required, null)
         return this
     }
 
@@ -61,8 +56,7 @@ open class Command<T : Call>(
         shortName: String = "",
         runs: T.(Float) -> Unit = {}
     ): Command<T> {
-        arguments[name] = FloatArgument(name, description, runs, shortName)
-        if (required) requiredArguments.add(name)
+        arguments[name] = Triple(FloatArgument(name, description, runs, shortName), required, null)
         return this
     }
 
@@ -73,8 +67,7 @@ open class Command<T : Call>(
         shortName: String = "",
         runs: T.(Double) -> Unit = {}
     ): Command<T> {
-        arguments[name] = DoubleArgument(name, description, runs, shortName)
-        if (required) requiredArguments.add(name)
+        arguments[name] = Triple(DoubleArgument(name, description, runs, shortName), required, null)
         return this
     }
 
@@ -85,12 +78,12 @@ open class Command<T : Call>(
         return false
     }
 
-    fun helpText(): String {
+    open fun helpText(): String {
         val required = HashMap<String, String>()
         val optional = HashMap<String, String>()
         for (arg in arguments) {
-            if (requiredArguments.contains(arg.key)) required[arg.key] = arg.value.description
-            else optional["${arg.key} (${arg.value.type.simpleName})"] = arg.value.description
+            if (arg.value.second) required[arg.key] = arg.value.first.description
+            else optional["${arg.key} (${arg.value.first.type.simpleName})"] = arg.value.first.description
         }
         var help = "$name: $description"
         if (required.isNotEmpty()) help += "\n Required Arguments:"
@@ -106,7 +99,6 @@ open class Command<T : Call>(
 
     @Throws(SyntaxError::class)
     fun execute(call: T) {
-        parsedArguments.clear()
         var argumentString = ""
         for (alias in aliases) {
             if (matches(call.callText)) {
@@ -118,17 +110,18 @@ open class Command<T : Call>(
         for (argMatch in command) {
             val arg = argMatch.value
             for ((name, argument) in arguments) {
-                if (argument.matches(arg)) {
-                    val parsed: Any? = if (argument.prefixOnly(arg)) {
+                arguments[name] = Triple(argument.first, argument.second, null)
+                if (argument.first.matches(arg)) {
+                    val parsed: Any? = if (argument.first.prefixOnly(arg)) {
                         if (command.last() != argMatch) {
-                            parseArgument(command[command.indexOf(argMatch) + 1].value, argument)!!
+                            parseArgument(command[command.indexOf(argMatch) + 1].value, argument.first)!!
                         } else {
-                            if (requiredArguments.contains(name)) throw SyntaxError("$name requires a value.") else null
+                            if (argument.second) throw SyntaxError("$name requires a value.") else null
                         }
-                    } else parseArgument(arg, argument) ?: throw SyntaxError("$name is null.")
-                    parsedArguments[name] = parsed
+                    } else parseArgument(arg, argument.first) ?: throw SyntaxError("$name is null.")
+                    arguments[name] = Triple(argument.first, argument.second, parsed)
                     if (parsed != null) {
-                        runArgument(call, parsed, argument)
+                        runArgument(call, argument)
                     }
                 }
             }
@@ -136,11 +129,15 @@ open class Command<T : Call>(
         run(call)
     }
 
-    fun <S> runArgument(call: T, value: S, argument: Argument<*, T>) {
-        if (value != null) if (argument.type == value!!::class) (argument as Argument<S, T>).runs.invoke(call, value)
+    open fun <S> runArgument(call: T, argument: Triple<Argument<*, T>, Boolean, S>) {
+        if (argument.third != null) {
+            if (argument.first.type == argument.third!!::class) {
+                (argument.first as Argument<S, T>).runs.invoke(call, argument.third)
+            }
+        }
     }
 
-    fun run(call: T) {
+    open fun run(call: T) {
         runs.invoke(this, call)
     }
 
@@ -150,10 +147,12 @@ open class Command<T : Call>(
 
     @Throws(SyntaxError::class)
     inline fun <reified T> getArgument(string: String): T? {
-        val argument = parsedArguments[string]
-            ?: if (requiredArguments.contains(string)) throw RuntimeException("$string is a required argument for $name yet it is null.") else return null
-        if (argument is T) return argument
-        else throw SyntaxError("Argument $string is not the correct type.")
+        val argInfo = arguments[string]
+        if (argInfo != null) {
+            val argument = argInfo.third ?: if (argInfo.second) throw RuntimeException("$string is a required argument for $name yet it is null.") else return null
+            if (argument is T) return argument
+            else throw SyntaxError("Argument $string is not the correct type.")
+        } else throw RuntimeException("$string is not an argument of $name.")
     }
 }
 

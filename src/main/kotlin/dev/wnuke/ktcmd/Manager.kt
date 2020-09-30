@@ -1,10 +1,26 @@
 package dev.wnuke.ktcmd
 
-class CommandManager<T : Call>(val prefix: String = "") {
-    private val commands = HashMap<ArrayList<String>, Command<T>>()
+open class CommandManager<T : Call>(val prefix: String = "") {
+    private val commands = HashMap<String, Command<T>>()
+
+    open val helpCommand: Command<T> = Command("help", "Lists commands and gets the help/usage text for a command.", arrayListOf("h, ?")) {
+        val commandName = getArgument<String>("command")
+        if (commandName != null) {
+            val command = commands[name]
+            if (command != null) {
+                it.info(command.helpText())
+            }
+        } else {
+            it.info(listCommands())
+        }
+    }
+
+    init {
+        addCommand(helpCommand)
+    }
 
     fun addCommand(command: Command<T>) {
-        commands[command.aliases] = command
+        commands[command.name] = command
     }
 
     fun loadCommands(commandsToAdd: Array<Command<T>>) {
@@ -13,7 +29,7 @@ class CommandManager<T : Call>(val prefix: String = "") {
         }
     }
 
-    fun listCommands() =
+    open fun listCommands() =
         "Available Commands: ${commands.entries.joinToString(separator = "") { "\n - ${it.key}${if (it.value.description.isNotEmpty()) ": ${it.value.description}" else ""}" }}"
 
     fun runCommand(call: T) {
