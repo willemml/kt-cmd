@@ -1,3 +1,5 @@
+package dev.wnuke.ktcmd
+
 class SyntaxError(problem: String) : RuntimeException(problem)
 
 abstract class Argument<T>(name: String, val description: String, val runs: (Call) -> Unit, val shortName: String, val type: String) {

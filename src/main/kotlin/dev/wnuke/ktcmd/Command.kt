@@ -1,3 +1,5 @@
+package dev.wnuke.ktcmd
+
 open class Command<T : Call>(val name: String, val description: String = "", val aliases: List<String>) {
     private val arguments = HashMap<String, Argument<*>>()
     private val requiredArguments = HashSet<String>()
