@@ -16,9 +16,9 @@ class CommandManager<T : Call>(val prefix: String = "") {
     fun listCommands() =
         "Available Commands: ${commands.entries.joinToString(separator = "") { "\n - ${it.key}${if (it.value.description.isNotEmpty()) ": ${it.value.description}" else ""}" }}"
 
-    fun runCommand(commandString: String, call: T) {
+    fun runCommand(call: T) {
         for (command in commands.values) {
-            if (command.matches(commandString)) {
+            if (command.matches(call.callText)) {
                 try {
                     command.execute(call)
                 } catch (e: RuntimeException) {
