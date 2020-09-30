@@ -1,12 +1,12 @@
 package dev.wnuke.ktcmd
 
-open class Command<T : Call>(val name: String, val description: String = "", val aliases: List<String>) {
+open class Command<T : Call>(val name: String, val description: String = "", var aliases: List<String>) {
     val arguments = HashMap<String, Argument<*>>()
     val requiredArguments = HashSet<String>()
     val parsedArguments = HashMap<String, Any?>()
 
     init {
-        aliases.plus(name)
+        aliases = aliases.plus(name)
     }
 
     fun string(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (Call) -> Unit = {}): Command<T> {
