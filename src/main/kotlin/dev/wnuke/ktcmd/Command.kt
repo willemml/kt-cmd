@@ -4,7 +4,7 @@ open class Command<T : Call>(
     val name: String,
     val description: String = "",
     val aliases: ArrayList<String> = ArrayList(),
-    val runs: (T) -> Unit
+    val runs: Command<T>.(T) -> Unit
 ) {
     val arguments = HashMap<String, Argument<*, T>>()
     val requiredArguments = HashSet<String>()
@@ -141,7 +141,7 @@ open class Command<T : Call>(
     }
 
     fun run(call: T) {
-        runs.invoke(call)
+        runs.invoke(this, call)
     }
 
     fun <U, S : Argument<U, T>> parseArgument(string: String, arg: S): U {
