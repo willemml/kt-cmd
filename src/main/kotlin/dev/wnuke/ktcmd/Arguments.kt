@@ -1,8 +1,10 @@
 package dev.wnuke.ktcmd
 
+import kotlin.reflect.KClass
+
 class SyntaxError(problem: String) : RuntimeException(problem)
 
-abstract class Argument<T>(name: String, val description: String, val runs: (Call) -> Unit, val shortName: String, val type: String) {
+abstract class Argument<T>(name: String, val description: String, val runs: (T) -> Unit, val shortName: String, val type: KClass<*>) {
     val prefix = "--$name"
     val shortPrefix = "-$shortName"
 
@@ -25,11 +27,11 @@ abstract class Argument<T>(name: String, val description: String, val runs: (Cal
     abstract fun parseValue(string: String): T
 }
 
-class StringArgument(name: String, description: String = "", runs: (Call) -> Unit, shortName: String) : Argument<String>(name, description, runs, shortName, "string") {
+class StringArgument(name: String, description: String = "", runs: (String) -> Unit, shortName: String) : Argument<String>(name, description, runs, shortName, String::class) {
     override fun parseValue(string: String) = string
 }
 
-class IntArgument(name: String, description: String = "", runs: (Call) -> Unit, shortName: String) : Argument<Int>(name, description, runs, shortName, "string") {
+class IntArgument(name: String, description: String = "", runs: (Int) -> Unit, shortName: String) : Argument<Int>(name, description, runs, shortName, Int::class) {
     override fun parseValue(string: String): Int {
         try {
             return string.toInt()
@@ -39,7 +41,7 @@ class IntArgument(name: String, description: String = "", runs: (Call) -> Unit, 
     }
 }
 
-class LongArgument(name: String, description: String = "", runs: (Call) -> Unit, shortName: String) : Argument<Long>(name, description, runs, shortName, "string") {
+class LongArgument(name: String, description: String = "", runs: (Long) -> Unit, shortName: String) : Argument<Long>(name, description, runs, shortName, Long::class) {
     override fun parseValue(string: String): Long {
         try {
             return string.toLong()
@@ -49,7 +51,7 @@ class LongArgument(name: String, description: String = "", runs: (Call) -> Unit,
     }
 }
 
-class FloatArgument(name: String, description: String = "", runs: (Call) -> Unit, shortName: String) : Argument<Float>(name, description, runs, shortName, "string") {
+class FloatArgument(name: String, description: String = "", runs: (Float) -> Unit, shortName: String) : Argument<Float>(name, description, runs, shortName, Float::class) {
     override fun parseValue(string: String): Float {
         try {
             return string.toFloat()
@@ -59,7 +61,7 @@ class FloatArgument(name: String, description: String = "", runs: (Call) -> Unit
     }
 }
 
-class DoubleArgument(name: String, description: String = "", runs: (Call) -> Unit, shortName: String) : Argument<Double>(name, description, runs, shortName, "string") {
+class DoubleArgument(name: String, description: String = "", runs: (Double) -> Unit, shortName: String) : Argument<Double>(name, description, runs, shortName, Double::class) {
     override fun parseValue(string: String): Double {
         try {
             return string.toDouble()

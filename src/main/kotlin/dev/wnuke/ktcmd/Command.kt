@@ -1,39 +1,43 @@
 package dev.wnuke.ktcmd
 
-open class Command<T : Call>(val name: String, val description: String = "", var aliases: List<String>) {
+open class Command<T : Call>(val name: String, val description: String = "", val aliases: ArrayList<String> = ArrayList(), val runs: (Call) -> Unit) {
     val arguments = HashMap<String, Argument<*>>()
     val requiredArguments = HashSet<String>()
     val parsedArguments = HashMap<String, Any?>()
 
     init {
-        aliases = aliases.plus(name)
+        aliases.add(name)
     }
 
-    fun string(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (Call) -> Unit = {}): Command<T> {
+    fun addToManager(manager: CommandManager<T>) {
+        manager.addCommand(this)
+    }
+
+    fun string(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (String) -> Unit = {}): Command<T> {
         arguments[name] = StringArgument(name, description, runs, shortName)
         if (required) requiredArguments.add(name)
         return this
     }
 
-    fun integer(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (Call) -> Unit = {}): Command<T> {
+    fun integer(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (Int) -> Unit = {}): Command<T> {
         arguments[name] = IntArgument(name, description, runs, shortName)
         if (required) requiredArguments.add(name)
         return this
     }
 
-    fun long(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (Call) -> Unit = {}): Command<T> {
+    fun long(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (Long) -> Unit = {}): Command<T> {
         arguments[name] = LongArgument(name, description, runs, shortName)
         if (required) requiredArguments.add(name)
         return this
     }
 
-    fun float(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (Call) -> Unit = {}): Command<T> {
+    fun float(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (Float) -> Unit = {}): Command<T> {
         arguments[name] = FloatArgument(name, description, runs, shortName)
         if (required) requiredArguments.add(name)
         return this
     }
 
-    fun double(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (Call) -> Unit = {}): Command<T> {
+    fun double(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (Double) -> Unit = {}): Command<T> {
         arguments[name] = DoubleArgument(name, description, runs, shortName)
         if (required) requiredArguments.add(name)
         return this
@@ -46,25 +50,20 @@ open class Command<T : Call>(val name: String, val description: String = "", var
         return false
     }
 
-    fun getArgumentDescriptions(): Pair<HashMap<String, String>, HashMap<String, String>> {
+    fun helpText(): String {
         val required = HashMap<String, String>()
         val optional = HashMap<String, String>()
         for (arg in arguments) {
             if (requiredArguments.contains(arg.key)) required[arg.key] = arg.value.description
-            else optional[arg.key] = arg.value.description
+            else optional["${arg.key} (${arg.value.type.simpleName})"] = arg.value.description
         }
-        return Pair(required, optional)
-    }
-
-    fun helpText(): String {
-        val args = getArgumentDescriptions()
         var help = "$name: $description"
-        if (args.first.isNotEmpty()) help += "\n Required Arguments:"
-        for ((name, description) in args.first) {
+        if (required.isNotEmpty()) help += "\n Required Arguments:"
+        for ((name, description) in required) {
             help += "\n  - $name: $description"
         }
-        if (args.second.isNotEmpty()) help += "\n Optional Arguments:"
-        for ((name, description) in args.second) {
+        if (optional.isNotEmpty()) help += "\n Optional Arguments:"
+        for ((name, description) in optional) {
             help += "\n  - $name: $description"
         }
         return help
@@ -93,10 +92,21 @@ open class Command<T : Call>(val name: String, val description: String = "", var
                         }
                     } else parseArgument(arg, argument) ?: throw SyntaxError("$name is null")
                     parsedArguments[name] = parsed
+                    if (parsed != null) {
+                        runArgument(parsed, argument)
+                    }
                 }
             }
         }
-        onRun(call)
+        run(call)
+    }
+
+    fun <T> runArgument(value: T, argument: Argument<*>) {
+        if (argument.type == value!!::class) (argument as Argument<T>).runs.invoke(value)
+    }
+
+    fun run(call: T) {
+        runs.invoke(call)
     }
 
     fun <U, T : Argument<U>> parseArgument(string: String, arg: T): U {
@@ -110,8 +120,6 @@ open class Command<T : Call>(val name: String, val description: String = "", var
         if (argument is T) return argument
         else throw SyntaxError("argument $string is not the correct type")
     }
-
-    open fun onRun(call: T) {}
 }
 
 open class Call(val callText: String) {
