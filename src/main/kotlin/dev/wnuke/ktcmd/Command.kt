@@ -1,9 +1,9 @@
 package dev.wnuke.ktcmd
 
 open class Command<T : Call>(val name: String, val description: String = "", val aliases: List<String>) {
-    private val arguments = HashMap<String, Argument<*>>()
-    private val requiredArguments = HashSet<String>()
-    private val parsedArguments = HashMap<String, Any>()
+    val arguments = HashMap<String, Argument<*>>()
+    val requiredArguments = HashSet<String>()
+    val parsedArguments = HashMap<String, Any>()
 
     init {
         aliases.plus(name)
@@ -46,7 +46,7 @@ open class Command<T : Call>(val name: String, val description: String = "", val
         return false
     }
 
-    private fun getArgumentDescriptions(): Pair<HashMap<String, String>, HashMap<String, String>> {
+    fun getArgumentDescriptions(): Pair<HashMap<String, String>, HashMap<String, String>> {
         val required = HashMap<String, String>()
         val optional = HashMap<String, String>()
         for (arg in arguments) {
@@ -99,12 +99,12 @@ open class Command<T : Call>(val name: String, val description: String = "", val
         onRun(call)
     }
 
-    private fun <U, T : Argument<U>> parseArgument(string: String, arg: T): U {
+    fun <U, T : Argument<U>> parseArgument(string: String, arg: T): U {
         return arg.parse(string)
     }
 
     @Throws(SyntaxError::class)
-    private inline fun <reified T> getArgument(string: String): T? {
+    inline fun <reified T> getArgument(string: String): T? {
         val argument = parsedArguments[string]
             ?: if (requiredArguments.contains(string)) throw RuntimeException("$string is a required argument for command $name and is missing") else return null
         if (argument is T) return argument

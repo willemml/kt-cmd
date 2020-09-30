@@ -3,8 +3,8 @@ package dev.wnuke.ktcmd
 class SyntaxError(problem: String) : RuntimeException(problem)
 
 abstract class Argument<T>(name: String, val description: String, val runs: (Call) -> Unit, val shortName: String, val type: String) {
-    private val prefix = "--$name"
-    private val shortPrefix = "-$shortName"
+    val prefix = "--$name"
+    val shortPrefix = "-$shortName"
 
     @Throws(SyntaxError::class)
     fun parse(string: String): T {
