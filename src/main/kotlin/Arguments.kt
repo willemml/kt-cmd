@@ -1,6 +1,6 @@
 class SyntaxError(problem: String) : RuntimeException(problem)
 
-abstract class Argument<T>(val name: String, val description: String, val runs: (Call) -> Unit, val shortName: String, val type: String) {
+abstract class Argument<T>(name: String, val description: String, val runs: (Call) -> Unit, val shortName: String, val type: String) {
     private val prefix = "--$name"
     private val shortPrefix = "-$shortName"
 
