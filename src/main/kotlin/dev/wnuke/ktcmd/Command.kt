@@ -4,9 +4,9 @@ open class Command<T : Call>(
     val name: String,
     val description: String = "",
     val aliases: ArrayList<String> = ArrayList(),
-    val runs: (Call) -> Unit
+    val runs: T.() -> Unit
 ) {
-    val arguments = HashMap<String, Argument<*>>()
+    val arguments = HashMap<String, Argument<*, T>>()
     val requiredArguments = HashSet<String>()
     val parsedArguments = HashMap<String, Any?>()
 
@@ -23,7 +23,7 @@ open class Command<T : Call>(
         required: Boolean = true,
         description: String = "",
         shortName: String = "",
-        runs: (String) -> Unit = {}
+        runs: T.(String) -> Unit = {}
     ): Command<T> {
         arguments[name] = StringArgument(name, description, runs, shortName)
         if (required) requiredArguments.add(name)
@@ -35,7 +35,7 @@ open class Command<T : Call>(
         required: Boolean = true,
         description: String = "",
         shortName: String = "",
-        runs: (Int) -> Unit = {}
+        runs: T.(Int) -> Unit = {}
     ): Command<T> {
         arguments[name] = IntArgument(name, description, runs, shortName)
         if (required) requiredArguments.add(name)
@@ -47,7 +47,7 @@ open class Command<T : Call>(
         required: Boolean = true,
         description: String = "",
         shortName: String = "",
-        runs: (Long) -> Unit = {}
+        runs: T.(Long) -> Unit = {}
     ): Command<T> {
         arguments[name] = LongArgument(name, description, runs, shortName)
         if (required) requiredArguments.add(name)
@@ -59,7 +59,7 @@ open class Command<T : Call>(
         required: Boolean = true,
         description: String = "",
         shortName: String = "",
-        runs: (Float) -> Unit = {}
+        runs: T.(Float) -> Unit = {}
     ): Command<T> {
         arguments[name] = FloatArgument(name, description, runs, shortName)
         if (required) requiredArguments.add(name)
@@ -71,7 +71,7 @@ open class Command<T : Call>(
         required: Boolean = true,
         description: String = "",
         shortName: String = "",
-        runs: (Double) -> Unit = {}
+        runs: T.(Double) -> Unit = {}
     ): Command<T> {
         arguments[name] = DoubleArgument(name, description, runs, shortName)
         if (required) requiredArguments.add(name)
@@ -128,7 +128,7 @@ open class Command<T : Call>(
                     } else parseArgument(arg, argument) ?: throw SyntaxError("$name is null.")
                     parsedArguments[name] = parsed
                     if (parsed != null) {
-                        runArgument(parsed, argument)
+                        runArgument(call, parsed, argument)
                     }
                 }
             }
@@ -136,15 +136,15 @@ open class Command<T : Call>(
         run(call)
     }
 
-    fun <T> runArgument(value: T, argument: Argument<*>) {
-        if (value != null) if (argument.type == value!!::class) (argument as Argument<T>).runs.invoke(value)
+    fun <S> runArgument(call: T, value: S, argument: Argument<*, T>) {
+        if (value != null) if (argument.type == value!!::class) (argument as Argument<S, T>).runs.invoke(call, value)
     }
 
     fun run(call: T) {
         runs.invoke(call)
     }
 
-    fun <U, T : Argument<U>> parseArgument(string: String, arg: T): U {
+    fun <U, S : Argument<U, T>> parseArgument(string: String, arg: S): U {
         return arg.parse(string)
     }
 
