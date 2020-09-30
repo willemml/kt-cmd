@@ -3,7 +3,7 @@ package dev.wnuke.ktcmd
 open class Command<T : Call>(val name: String, val description: String = "", val aliases: List<String>) {
     val arguments = HashMap<String, Argument<*>>()
     val requiredArguments = HashSet<String>()
-    val parsedArguments = HashMap<String, Any>()
+    val parsedArguments = HashMap<String, Any?>()
 
     init {
         aliases.plus(name)
@@ -58,14 +58,14 @@ open class Command<T : Call>(val name: String, val description: String = "", val
 
     fun helpText(): String {
         val args = getArgumentDescriptions()
-        var help = "$name  $description"
+        var help = "$name: $description"
         if (args.first.isNotEmpty()) help += "\n Required Arguments:"
-        for (arg in args.first) {
-            help += "\n  - ${arg.key}: ${arg.value}$"
+        for ((name, description) in args.first) {
+            help += "\n  - $name: $description"
         }
         if (args.second.isNotEmpty()) help += "\n Optional Arguments:"
         for ((name, description) in args.second) {
-            help += "\n  - $name: $description$"
+            help += "\n  - $name: $description"
         }
         return help
     }
@@ -80,19 +80,19 @@ open class Command<T : Call>(val name: String, val description: String = "", val
                 break
             }
         }
-        val command = argumentString.split(Regex(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)"))
-        for (arg in command) {
+        val command = Regex("(?<=\")[^\"]*(?=\")|[^\" ]+").findAll(argumentString).toList()
+        for (argMatch in command) {
+            val arg = argMatch.value
             for ((name, argument) in arguments) {
                 if (argument.matches(arg)) {
                     val parsed: Any? = if (argument.prefixOnly(arg)) {
-                        if (command.last() != arg) {
-                            parseArgument(command[command.indexOf(arg) + 1], argument)!!
+                        if (command.last() != argMatch) {
+                            parseArgument(command[command.indexOf(argMatch) + 1].value, argument)!!
                         } else {
                             if (requiredArguments.contains(name)) throw SyntaxError("$name requires a value") else null
                         }
                     } else parseArgument(arg, argument) ?: throw SyntaxError("$name is null")
-                    if (parsed != null) parsedArguments[name] = parsed
-                    break
+                    parsedArguments[name] = parsed
                 }
             }
         }
