@@ -4,7 +4,7 @@ open class Command<T : Call>(
     val name: String,
     val description: String = "",
     val aliases: ArrayList<String> = ArrayList(),
-    val runs: T.() -> Unit
+    val runs: (T) -> Unit
 ) {
     val arguments = HashMap<String, Argument<*, T>>()
     val requiredArguments = HashSet<String>()
