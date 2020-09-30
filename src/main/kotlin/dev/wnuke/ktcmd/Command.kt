@@ -9,6 +9,10 @@ open class Command<T : Call>(val name: String, val description: String = "", val
         aliases.add(name)
     }
 
+    fun addToManager(manager: CommandManager<T>) {
+        manager.addCommand(this)
+    }
+
     fun string(name: String, required: Boolean = true, description: String = "", shortName: String = "", runs: (String) -> Unit = {}): Command<T> {
         arguments[name] = StringArgument(name, description, runs, shortName)
         if (required) requiredArguments.add(name)
@@ -84,9 +88,9 @@ open class Command<T : Call>(val name: String, val description: String = "", val
                         if (command.last() != argMatch) {
                             parseArgument(command[command.indexOf(argMatch) + 1].value, argument)!!
                         } else {
-                            if (requiredArguments.contains(name)) throw SyntaxError("$name requires a value") else null
+                            if (requiredArguments.contains(name)) throw SyntaxError("$name requires a value.") else null
                         }
-                    } else parseArgument(arg, argument) ?: throw SyntaxError("$name is null")
+                    } else parseArgument(arg, argument) ?: throw SyntaxError("$name is null.")
                     parsedArguments[name] = parsed
                     if (parsed != null) {
                         runArgument(parsed, argument)
@@ -98,7 +102,7 @@ open class Command<T : Call>(val name: String, val description: String = "", val
     }
 
     fun <T> runArgument(value: T, argument: Argument<*>) {
-        if (argument.type == value!!::class) (argument as Argument<T>).runs.invoke(value)
+        if (value != null) if (argument.type == value!!::class) (argument as Argument<T>).runs.invoke(value)
     }
 
     fun run(call: T) {
@@ -112,14 +116,15 @@ open class Command<T : Call>(val name: String, val description: String = "", val
     @Throws(SyntaxError::class)
     inline fun <reified T> getArgument(string: String): T? {
         val argument = parsedArguments[string]
-            ?: if (requiredArguments.contains(string)) throw RuntimeException("$string is a required argument for command $name and is missing") else return null
+            ?: if (requiredArguments.contains(string)) throw RuntimeException("$string is a required argument for $name yet it is null.") else return null
         if (argument is T) return argument
-        else throw SyntaxError("argument $string is not the correct type")
+        else throw SyntaxError("Argument $string is not the correct type.")
     }
 }
 
-open class Call(val callText: String) {
-    fun respond(message: String) {
-        println(message)
-    }
+abstract class Call(val callText: String) {
+    abstract fun respond(message: String)
+    open fun error(message: String) = respond(message)
+    open fun success(message: String) = respond(message)
+    open fun info(message: String) = respond(message)
 }
