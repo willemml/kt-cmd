@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "1.4.10"
+    application
     `maven-publish`
 }
 group = "dev.wnuke"
@@ -11,6 +12,10 @@ repositories {
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
+}
+
+application {
+    mainClassName = "dev.wnuke.ktcmd.ExamplesKt"
 }
 
 publishing {

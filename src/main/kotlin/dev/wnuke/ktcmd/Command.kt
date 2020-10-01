@@ -6,7 +6,7 @@ open class Command<T : Call>(
     val aliases: ArrayList<String> = ArrayList(),
     val runs: Command<T>.(T) -> Unit
 ) {
-    var arguments = HashMap<String, Triple<Argument<*, T>, Boolean, Any?>>()
+    val arguments = HashMap<String, Triple<Argument<*, T>, Boolean, Any?>>()
 
     init {
         aliases.add(name)
@@ -116,16 +116,20 @@ open class Command<T : Call>(
                 break
             }
         }
-        val command = Regex("(?<=\")[^\"]*(?=\")|[^\" ]+").findAll(argumentString).toList()
-        for (argMatch in command) {
-            val arg = argMatch.value
-            for ((name, argument) in arguments) {
+        val command = Regex("(?<=\")[^\"]*(?=\")|[^\" ]+").findAll(argumentString).map { it.value }.toMutableList()
+        println("$argumentString -> ${command.joinToString { "\"${it}\"" }}")
+        val argsDone = HashSet<String>()
+        for (arg in command) {
+            for ((name, argument) in arguments.filter { !argsDone.contains(it.key) }) {
                 arguments[name] = Triple(argument.first, argument.second, null)
                 if (argument.first.matches(arg)) {
                     val parsed: Any? =
-                        if (argument.first.prefixOnly(arg)) if (command.last() != argMatch) parseArgument(
-                            command[command.indexOf(argMatch) + 1].value, argument.first
-                        )!! else null
+                        if (argument.first.prefixOnly(arg)) if (arg != command.last()) parseArgument(
+                            command.elementAt(
+                                command.indexOf(arg) + 1
+                            ), argument.first
+                        )!!
+                        else null
                         else parseArgument(arg, argument.first)
                     if (argument.second && parsed == null) throw RuntimeCommandSyntaxError("Argument $name of ${this.name} requires a value.")
                     val argumentParsed = Triple(argument.first, argument.second, parsed)
@@ -133,6 +137,8 @@ open class Command<T : Call>(
                     if (parsed != null) {
                         runArgument(call, argumentParsed)
                     }
+                    argsDone.add(name)
+                    break
                 }
             }
         }
@@ -159,24 +165,20 @@ open class Command<T : Call>(
 
     @Throws(IllegalArgumentException::class)
     inline fun <reified T> getOptionalArgument(string: String): T? {
-        if (arguments.containsKey(string)) {
-            return if (arguments[string]?.third != null) getArgument<T>(string)
-            else null
-        }
-        throw IllegalArgumentException("$string is not an argument of $name.")
+        val argument = arguments[string] ?: throw IllegalArgumentException("$string is not an argument of $name.")
+        val value = argument.third ?: return null
+        if (value is T) return value
+        throw IllegalArgumentException("Argument $string of $name is not of type ${T::class.simpleName}.")
     }
 
     @Throws(IllegalArgumentException::class)
     inline fun <reified T> getArgument(string: String): T {
-        val argument = arguments[string] ?: throw IllegalArgumentException("$string is not an argument of $name.")
-        val value =
-            argument.third ?: throw IllegalArgumentException("Attempting to get an optional argument that is null.")
-        if (value is T) return value
-        throw IllegalArgumentException("Argument $string of $name is not of type ${T::class.simpleName}.")
+        return getOptionalArgument(string)
+            ?: throw IllegalArgumentException("Attempting to get an optional argument that is null.")
     }
 }
 
-abstract class Call(val callText: String) {
+abstract class Call(var callText: String) {
     abstract fun respond(message: String)
     open fun error(message: String) = respond(message)
     open fun success(message: String) = respond(message)
