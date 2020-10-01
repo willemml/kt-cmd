@@ -44,6 +44,7 @@ open class CommandManager<T : Call>(val prefix: String = "") {
                     command.execute(call)
                 } catch (e: RuntimeCommandSyntaxError) {
                     e.message?.let { call.error(it) }
+                    call.info(command.helpText())
                 }
                 return
             }
