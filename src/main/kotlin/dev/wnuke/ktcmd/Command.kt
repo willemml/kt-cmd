@@ -173,7 +173,7 @@ open class Command<T : Call>(
     @Throws(IllegalArgumentException::class)
     inline fun <reified T> getArgument(string: String): T {
         return getOptionalArgument(string)
-            ?: throw IllegalArgumentException("Attempting to get an optional argument that is null.")
+            ?: throw RuntimeCommandSyntaxError("Argument $string is missing.")
     }
 }
 
