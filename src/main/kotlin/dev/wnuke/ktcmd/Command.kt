@@ -16,6 +16,7 @@ open class Command<T : Call>(
         manager.addCommand(this)
     }
 
+    @Throws(IllegalArgumentException::class)
     fun string(
         name: String,
         required: Boolean = true,
@@ -23,10 +24,12 @@ open class Command<T : Call>(
         shortName: String = "",
         runs: T.(String) -> Unit = {}
     ): Command<T> {
+        if (arguments.containsKey(name)) throw IllegalArgumentException("There is already an argument called $name.")
         arguments[name] = Triple(StringArgument(name, description, runs, shortName), required, null)
         return this
     }
 
+    @Throws(IllegalArgumentException::class)
     fun integer(
         name: String,
         required: Boolean = true,
@@ -34,10 +37,12 @@ open class Command<T : Call>(
         shortName: String = "",
         runs: T.(Int) -> Unit = {}
     ): Command<T> {
+        if (arguments.containsKey(name)) throw IllegalArgumentException("There is already an argument called $name.")
         arguments[name] = Triple(IntArgument(name, description, runs, shortName), required, null)
         return this
     }
 
+    @Throws(IllegalArgumentException::class)
     fun long(
         name: String,
         required: Boolean = true,
@@ -45,10 +50,12 @@ open class Command<T : Call>(
         shortName: String = "",
         runs: T.(Long) -> Unit = {}
     ): Command<T> {
+        if (arguments.containsKey(name)) throw IllegalArgumentException("There is already an argument called $name.")
         arguments[name] = Triple(LongArgument(name, description, runs, shortName), required, null)
         return this
     }
 
+    @Throws(IllegalArgumentException::class)
     fun float(
         name: String,
         required: Boolean = true,
@@ -56,10 +63,12 @@ open class Command<T : Call>(
         shortName: String = "",
         runs: T.(Float) -> Unit = {}
     ): Command<T> {
+        if (arguments.containsKey(name)) throw IllegalArgumentException("There is already an argument called $name.")
         arguments[name] = Triple(FloatArgument(name, description, runs, shortName), required, null)
         return this
     }
 
+    @Throws(IllegalArgumentException::class)
     fun double(
         name: String,
         required: Boolean = true,
@@ -67,6 +76,7 @@ open class Command<T : Call>(
         shortName: String = "",
         runs: T.(Double) -> Unit = {}
     ): Command<T> {
+        if (arguments.containsKey(name)) throw IllegalArgumentException("There is already an argument called $name.")
         arguments[name] = Triple(DoubleArgument(name, description, runs, shortName), required, null)
         return this
     }
@@ -97,7 +107,7 @@ open class Command<T : Call>(
         return help
     }
 
-    @Throws(SyntaxError::class)
+    @Throws(RuntimeCommandSyntaxError::class, IllegalArgumentException::class)
     fun execute(call: T) {
         var argumentString = ""
         for (alias in aliases) {
@@ -112,16 +122,16 @@ open class Command<T : Call>(
             for ((name, argument) in arguments) {
                 arguments[name] = Triple(argument.first, argument.second, null)
                 if (argument.first.matches(arg)) {
-                    val parsed: Any? = if (argument.first.prefixOnly(arg)) {
-                        if (command.last() != argMatch) {
-                            parseArgument(command[command.indexOf(argMatch) + 1].value, argument.first)!!
-                        } else {
-                            if (argument.second) throw SyntaxError("$name requires a value.") else null
-                        }
-                    } else parseArgument(arg, argument.first) ?: throw SyntaxError("$name is null.")
-                    arguments[name] = Triple(argument.first, argument.second, parsed)
+                    val parsed: Any? =
+                        if (argument.first.prefixOnly(arg)) if (command.last() != argMatch) parseArgument(
+                            command[command.indexOf(argMatch) + 1].value, argument.first
+                        )!! else null
+                        else parseArgument(arg, argument.first)
+                    if (argument.second && parsed == null) throw RuntimeCommandSyntaxError("Argument $name of ${this.name} requires a value.")
+                    val argumentParsed = Triple(argument.first, argument.second, parsed)
+                    arguments[name] = argumentParsed
                     if (parsed != null) {
-                        runArgument(call, argument)
+                        runArgument(call, argumentParsed)
                     }
                 }
             }
@@ -141,18 +151,27 @@ open class Command<T : Call>(
         runs.invoke(this, call)
     }
 
+    @Throws(RuntimeCommandSyntaxError::class)
     fun <U, S : Argument<U, T>> parseArgument(string: String, arg: S): U {
         return arg.parse(string)
     }
 
-    @Throws(SyntaxError::class)
-    inline fun <reified T> getArgument(string: String): T? {
-        val argInfo = arguments[string]
-        if (argInfo != null) {
-            val argument = argInfo.third ?: if (argInfo.second) throw RuntimeException("$string is a required argument for $name yet it is null.") else return null
-            if (argument is T) return argument
-            else throw SyntaxError("Argument $string is not the correct type.")
-        } else throw RuntimeException("$string is not an argument of $name.")
+    @Throws(IllegalArgumentException::class)
+    inline fun <reified T> getOptionalArgument(string: String): T? {
+        if (arguments.containsKey(string)) {
+            return if (arguments[string]?.third != null) getArgument<T>(string)
+            else null
+        }
+        throw IllegalArgumentException("$string is not an argument of $name.")
+    }
+
+    @Throws(IllegalArgumentException::class)
+    inline fun <reified T> getArgument(string: String): T {
+        val argument = arguments[string] ?: throw IllegalArgumentException("$string is not an argument of $name.")
+        val value =
+            argument.third ?: throw IllegalArgumentException("Attempting to get an optional argument that is null.")
+        if (value is T) return value
+        throw IllegalArgumentException("Argument $string of $name is not of type ${T::class.simpleName}.")
     }
 }
 

@@ -2,7 +2,7 @@ package dev.wnuke.ktcmd
 
 import kotlin.reflect.KClass
 
-class SyntaxError(problem: String) : RuntimeException(problem)
+class RuntimeCommandSyntaxError(problem: String) : RuntimeException(problem)
 
 abstract class Argument<T, U : Call>(
     name: String,
@@ -14,7 +14,7 @@ abstract class Argument<T, U : Call>(
     val prefix = "--$name"
     val shortPrefix = "-$shortName"
 
-    @Throws(SyntaxError::class)
+    @Throws(RuntimeCommandSyntaxError::class)
     fun parse(string: String): T {
         if (string.startsWith("$prefix=")) return parseValue(string.removePrefix("$prefix="))
         if (shortName.isNotEmpty() && string.startsWith("$shortPrefix=")) return parseValue(string.removePrefix("$shortPrefix="))
@@ -29,7 +29,7 @@ abstract class Argument<T, U : Call>(
 
     fun prefixOnly(string: String) = string == prefix || string == shortPrefix
 
-    @Throws(SyntaxError::class)
+    @Throws(RuntimeCommandSyntaxError::class)
     abstract fun parseValue(string: String): T
 }
 
@@ -44,7 +44,7 @@ class IntArgument<T : Call>(name: String, description: String = "", runs: T.(Int
         try {
             return string.toInt()
         } catch (_: NumberFormatException) {
-            throw SyntaxError("$string is not a valid Integer.")
+            throw RuntimeCommandSyntaxError("$string is not a valid Integer.")
         }
     }
 }
@@ -55,7 +55,7 @@ class LongArgument<T : Call>(name: String, description: String = "", runs: T.(Lo
         try {
             return string.toLong()
         } catch (_: NumberFormatException) {
-            throw SyntaxError("$string is not a valid Long.")
+            throw RuntimeCommandSyntaxError("$string is not a valid Long.")
         }
     }
 }
@@ -66,7 +66,7 @@ class FloatArgument<T : Call>(name: String, description: String = "", runs: T.(F
         try {
             return string.toFloat()
         } catch (_: NumberFormatException) {
-            throw SyntaxError("$string is not a valid Float.")
+            throw RuntimeCommandSyntaxError("$string is not a valid Float.")
         }
     }
 }
@@ -77,7 +77,7 @@ class DoubleArgument<T : Call>(name: String, description: String = "", runs: T.(
         try {
             return string.toDouble()
         } catch (_: NumberFormatException) {
-            throw SyntaxError("$string is not a valid Double.")
+            throw RuntimeCommandSyntaxError("$string is not a valid Double.")
         }
     }
 }

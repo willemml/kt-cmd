@@ -3,8 +3,8 @@ package dev.wnuke.ktcmd
 open class CommandManager<T : Call>(val prefix: String = "") {
     private val commands = HashMap<String, Command<T>>()
 
-    open val helpCommand: Command<T> = Command("help", "Lists commands and gets the help/usage text for a command.", arrayListOf("h, ?")) {
-        val commandName = getArgument<String>("command")
+    val helpCommand: Command<T> = Command("help", "Lists commands and gets the help/usage text for a command.", arrayListOf("h, ?")) {
+        val commandName = getOptionalArgument<String>("command")
         if (commandName != null) {
             val command = commands[name]
             if (command != null) {
@@ -37,7 +37,7 @@ open class CommandManager<T : Call>(val prefix: String = "") {
             if (command.matches(call.callText)) {
                 try {
                     command.execute(call)
-                } catch (e: RuntimeException) {
+                } catch (e: RuntimeCommandSyntaxError) {
                     e.message?.let { call.error(it) }
                 }
                 return
