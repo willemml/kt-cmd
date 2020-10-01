@@ -16,6 +16,9 @@ open class CommandManager<T : Call>(val prefix: String = "") {
     }
 
     init {
+        helpCommand.apply {
+            string("command", false, "Command to get help/usage text of.", "c")
+        }
         addCommand(helpCommand)
     }
 
