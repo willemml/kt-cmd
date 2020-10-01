@@ -9,6 +9,8 @@ open class CommandManager<T : Call>(val prefix: String = "") {
             val command = commands[name]
             if (command != null) {
                 it.info(command.helpText())
+            } else {
+                it.error("No command with name $commandName.")
             }
         } else {
             it.info(listCommands())

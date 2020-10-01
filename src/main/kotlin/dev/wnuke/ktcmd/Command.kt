@@ -147,6 +147,7 @@ open class Command<T : Call>(
         }
     }
 
+    @Throws(IllegalArgumentException::class)
     open fun run(call: T) {
         runs.invoke(this, call)
     }
