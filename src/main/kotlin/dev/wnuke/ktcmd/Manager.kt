@@ -5,7 +5,6 @@ open class CommandManager<T : Call>(val prefix: String = "") {
 
     val helpCommand: Command<T> = Command("help", "Lists commands and gets the help/usage text for a command.", arrayListOf("h, ?")) {
         val commandName = getOptionalArgument<String>("command")
-        println(commandName)
         if (commandName != null) {
             val command = commands[name]
             if (command != null) {
@@ -40,8 +39,7 @@ open class CommandManager<T : Call>(val prefix: String = "") {
 
     fun runCommand(call: T) {
         for (command in commands.values) {
-            call.callText = call.callText.removePrefix(prefix)
-            if (command.matches(call.callText)) {
+            if (command.matches(call.callText) || command.matches(call.callText.removePrefix(prefix))) {
                 try {
                     command.execute(call)
                 } catch (e: RuntimeCommandSyntaxError) {

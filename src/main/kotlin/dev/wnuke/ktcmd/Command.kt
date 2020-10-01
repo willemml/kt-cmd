@@ -117,7 +117,6 @@ open class Command<T : Call>(
             }
         }
         val command = Regex("(?<=\")[^\"]*(?=\")|[^\" ]+").findAll(argumentString).map { it.value }.toMutableList()
-        println("$argumentString -> ${command.joinToString { "\"${it}\"" }}")
         val argsDone = HashSet<String>()
         for (arg in command) {
             for ((name, argument) in arguments.filter { !argsDone.contains(it.key) }) {
