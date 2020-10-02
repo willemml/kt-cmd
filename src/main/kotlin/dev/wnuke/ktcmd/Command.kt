@@ -92,13 +92,14 @@ open class Command<T : Call>(
         val required = HashMap<String, String>()
         val optional = HashMap<String, String>()
         for (arg in arguments) {
-            if (arg.value.second) required[arg.key] = arg.value.first.description
-            else optional["${arg.key} (${arg.value.first.type.simpleName})"] = arg.value.first.description
+            val argNameString = "${arg.key} (${arg.value.first.type.simpleName})"
+            if (arg.value.second) required[argNameString] = arg.value.first.description
+            else optional[argNameString] = arg.value.first.description
         }
         var help = "$name: $description"
         if (required.isNotEmpty()) help += "\n Required Arguments:"
         for ((name, description) in required) {
-            help += "\n  - $name: $description"
+            help += "\n  --$name: $description"
         }
         if (optional.isNotEmpty()) help += "\n Optional Arguments:"
         for ((name, description) in optional) {
