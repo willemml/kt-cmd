@@ -6,7 +6,7 @@ open class CommandManager<T : Call>(val prefix: String = "") {
     val helpCommand: Command<T> = Command("help", "Lists commands and gets the help/usage text for a command.", arrayListOf("h, ?")) {
         val commandName = getOptionalArgument<String>("command")
         if (commandName != null) {
-            val command = commands[name]
+            val command = commands[commandName]
             if (command != null) {
                 it.info(command.helpText())
             } else {
