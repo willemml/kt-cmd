@@ -83,7 +83,7 @@ open class Command<T : Call>(
 
     fun matches(string: String): Boolean {
         for (alias in aliases) {
-            if (string.startsWith("$alias ")) return true
+            if (string.startsWith("$alias ") || string == alias) return true
         }
         return false
     }
