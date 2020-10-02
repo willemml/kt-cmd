@@ -88,24 +88,29 @@ open class Command<T : Call>(
         return false
     }
 
+    var helpCache = ""
+
     open fun helpText(): String {
-        val required = HashMap<String, String>()
-        val optional = HashMap<String, String>()
-        for (arg in arguments) {
-            val argNameString = "--${arg.key} ${if (arg.value.first.shortName.isNotEmpty()) arg.value.first.shortPrefix else ""} (${arg.value.first.type.simpleName})"
-            if (arg.value.second) required[argNameString] = arg.value.first.description
-            else optional[argNameString] = arg.value.first.description
+        if (helpCache.isEmpty()) {
+            val required = HashMap<String, String>()
+            val optional = HashMap<String, String>()
+            for (arg in arguments) {
+                val argNameString =
+                    "--${arg.key} [${if (arg.value.first.shortName.isNotEmpty()) arg.value.first.shortPrefix else ""}] (${arg.value.first.type.simpleName})"
+                if (arg.value.second) required[argNameString] = arg.value.first.description
+                else optional[argNameString] = arg.value.first.description
+            }
+            helpCache = "$name: $description"
+            if (required.isNotEmpty()) helpCache += "\n Required Arguments:"
+            for ((name, description) in required) {
+                helpCache += "\n  $name: $description"
+            }
+            if (optional.isNotEmpty()) helpCache += "\n Optional Arguments:"
+            for ((name, description) in optional) {
+                helpCache += "\n  $name: $description"
+            }
         }
-        var help = "$name: $description"
-        if (required.isNotEmpty()) help += "\n Required Arguments:"
-        for ((name, description) in required) {
-            help += "\n  $name: $description"
-        }
-        if (optional.isNotEmpty()) help += "\n Optional Arguments:"
-        for ((name, description) in optional) {
-            help += "\n  $name: $description"
-        }
-        return help
+        return helpCache
     }
 
     @Throws(RuntimeCommandSyntaxError::class, IllegalArgumentException::class)
