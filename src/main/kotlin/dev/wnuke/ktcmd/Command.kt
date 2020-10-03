@@ -171,11 +171,11 @@ open class Command<T : Call>(
 
     /**
      * Gets the help text for this command, with a format of:
-     * [name]: [description]
-     * Required Arguments:
-     *   [argName]: [argDescription]
-     * Optional Arguments:
-     *   [argName]: [argDescription]
+     * name: Description of command.
+     *   Required Arguments:
+     *     prefix [shortPrefix] (type): Description of required argument
+     *   Optional Arguments:
+     *     prefix [shortPrefix] (type): Description of optional argument
      *
      * @return The previous as a formatted String using newlines as line breaks
      */

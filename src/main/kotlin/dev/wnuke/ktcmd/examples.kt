@@ -2,6 +2,9 @@ package dev.wnuke.ktcmd
 
 val manager = CommandManager<Message>()
 
+/**
+ * For testing only, simplifies the testing process of making sure everything is working visually
+ */
 fun main() {
     val testCommandZero = Command<Message>("testZero", "Test for commands with no arguments.", arrayListOf("0")) {
         println("$name: $description")
