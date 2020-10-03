@@ -22,10 +22,12 @@ open class Command<T : Call>(
         required: Boolean = true,
         description: String = "",
         shortName: String = "",
+        default: String = "",
         runs: T.(String) -> Unit = {}
     ): Command<T> {
-        if (arguments.containsKey(name)) throw IllegalArgumentException("There is already an argument called $name.")
-        arguments[name] = Triple(StringArgument(name, description, runs, shortName), required, null)
+        val nameProcessed = name.trim().replace(' ', '_')
+        if (arguments.containsKey(nameProcessed)) throw IllegalArgumentException("There is already an argument called $name.")
+        arguments[nameProcessed] = Triple(StringArgument(nameProcessed, description, default, runs, shortName.trim().replace(' ', '_')), required, null)
         return this
     }
 
@@ -35,10 +37,12 @@ open class Command<T : Call>(
         required: Boolean = true,
         description: String = "",
         shortName: String = "",
+        default: Int = -1,
         runs: T.(Int) -> Unit = {}
     ): Command<T> {
-        if (arguments.containsKey(name)) throw IllegalArgumentException("There is already an argument called $name.")
-        arguments[name] = Triple(IntArgument(name, description, runs, shortName), required, null)
+        val nameProcessed = name.trim().replace(' ', '_')
+        if (arguments.containsKey(nameProcessed)) throw IllegalArgumentException("There is already an argument called $name.")
+        arguments[nameProcessed] = Triple(IntArgument(nameProcessed, description, default, runs, shortName.trim().replace(' ', '_')), required, null)
         return this
     }
 
@@ -48,10 +52,12 @@ open class Command<T : Call>(
         required: Boolean = true,
         description: String = "",
         shortName: String = "",
+        default: Long = -1,
         runs: T.(Long) -> Unit = {}
     ): Command<T> {
-        if (arguments.containsKey(name)) throw IllegalArgumentException("There is already an argument called $name.")
-        arguments[name] = Triple(LongArgument(name, description, runs, shortName), required, null)
+        val nameProcessed = name.trim().replace(' ', '_')
+        if (arguments.containsKey(nameProcessed)) throw IllegalArgumentException("There is already an argument called $name.")
+        arguments[nameProcessed] = Triple(LongArgument(nameProcessed, description, default, runs, shortName.trim().replace(' ', '_')), required, null)
         return this
     }
 
@@ -61,10 +67,12 @@ open class Command<T : Call>(
         required: Boolean = true,
         description: String = "",
         shortName: String = "",
+        default: Float = -1.0F,
         runs: T.(Float) -> Unit = {}
     ): Command<T> {
-        if (arguments.containsKey(name)) throw IllegalArgumentException("There is already an argument called $name.")
-        arguments[name] = Triple(FloatArgument(name, description, runs, shortName), required, null)
+        val nameProcessed = name.trim().replace(' ', '_')
+        if (arguments.containsKey(nameProcessed)) throw IllegalArgumentException("There is already an argument called $name.")
+        arguments[nameProcessed] = Triple(FloatArgument(nameProcessed, description, default, runs, shortName.trim().replace(' ', '_')), required, null)
         return this
     }
 
@@ -74,10 +82,12 @@ open class Command<T : Call>(
         required: Boolean = true,
         description: String = "",
         shortName: String = "",
+        default: Double = -1.0,
         runs: T.(Double) -> Unit = {}
     ): Command<T> {
-        if (arguments.containsKey(name)) throw IllegalArgumentException("There is already an argument called $name.")
-        arguments[name] = Triple(DoubleArgument(name, description, runs, shortName), required, null)
+        val nameProcessed = name.trim().replace(' ', '_')
+        if (arguments.containsKey(nameProcessed)) throw IllegalArgumentException("There is already an argument called $name.")
+        arguments[nameProcessed] = Triple(DoubleArgument(nameProcessed, description, default, runs, shortName.trim().replace(' ', '_')), required, null)
         return this
     }
 
@@ -169,17 +179,19 @@ open class Command<T : Call>(
     }
 
     @Throws(IllegalArgumentException::class)
-    inline fun <reified T> getOptionalArgument(string: String): T? {
+    inline fun <reified T> getAnyArgument(string: String, useDefault: Boolean = false): T? {
         val argument = arguments[string] ?: throw IllegalArgumentException("$string is not an argument of $name.")
-        val value = argument.third ?: return null
+        val value = argument.third ?: return if (useDefault && argument.first.default is T) argument.first.default as T else null
         if (value is T) return value
         throw IllegalArgumentException("Argument $string of $name is not of type ${T::class.simpleName}.")
     }
 
     @Throws(IllegalArgumentException::class)
+    inline fun <reified T> getOptionalArgument(string: String): T = getAnyArgument(string, true)!!
+
+    @Throws(IllegalArgumentException::class)
     inline fun <reified T> getArgument(string: String): T {
-        return getOptionalArgument(string)
-            ?: throw RuntimeCommandSyntaxError("Argument $string is missing.")
+        return getAnyArgument(string, false) ?: throw RuntimeCommandSyntaxError("Argument $string is missing.")
     }
 }
 

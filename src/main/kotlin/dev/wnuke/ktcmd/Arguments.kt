@@ -9,6 +9,7 @@ abstract class Argument<T, U : Call>(
     val description: String,
     val runs: U.(T) -> Unit,
     val shortName: String,
+    val default: T,
     val type: KClass<*>
 ) {
     val prefix = "--$name"
@@ -33,13 +34,13 @@ abstract class Argument<T, U : Call>(
     abstract fun parseValue(string: String): T
 }
 
-class StringArgument<T : Call>(name: String, description: String = "", runs: T.(String) -> Unit, shortName: String) :
-    Argument<String, T>(name, description, runs, shortName, String::class) {
+class StringArgument<T : Call>(name: String, description: String = "", default: String, runs: T.(String) -> Unit, shortName: String) :
+    Argument<String, T>(name, description, runs, shortName, default, String::class) {
     override fun parseValue(string: String) = string
 }
 
-class IntArgument<T : Call>(name: String, description: String = "", runs: T.(Int) -> Unit, shortName: String) :
-    Argument<Int, T>(name, description, runs, shortName, Int::class) {
+class IntArgument<T : Call>(name: String, description: String = "", default: Int, runs: T.(Int) -> Unit, shortName: String) :
+    Argument<Int, T>(name, description, runs, shortName, default, Int::class) {
     override fun parseValue(string: String): Int {
         try {
             return string.toInt()
@@ -49,8 +50,8 @@ class IntArgument<T : Call>(name: String, description: String = "", runs: T.(Int
     }
 }
 
-class LongArgument<T : Call>(name: String, description: String = "", runs: T.(Long) -> Unit, shortName: String) :
-    Argument<Long, T>(name, description, runs, shortName, Long::class) {
+class LongArgument<T : Call>(name: String, description: String = "", default: Long, runs: T.(Long) -> Unit, shortName: String) :
+    Argument<Long, T>(name, description, runs, shortName, default, Long::class) {
     override fun parseValue(string: String): Long {
         try {
             return string.toLong()
@@ -60,8 +61,8 @@ class LongArgument<T : Call>(name: String, description: String = "", runs: T.(Lo
     }
 }
 
-class FloatArgument<T : Call>(name: String, description: String = "", runs: T.(Float) -> Unit, shortName: String) :
-    Argument<Float, T>(name, description, runs, shortName, Float::class) {
+class FloatArgument<T : Call>(name: String, description: String = "", default: Float, runs: T.(Float) -> Unit, shortName: String) :
+    Argument<Float, T>(name, description, runs, shortName, default, Float::class) {
     override fun parseValue(string: String): Float {
         try {
             return string.toFloat()
@@ -71,8 +72,8 @@ class FloatArgument<T : Call>(name: String, description: String = "", runs: T.(F
     }
 }
 
-class DoubleArgument<T : Call>(name: String, description: String = "", runs: T.(Double) -> Unit, shortName: String) :
-    Argument<Double, T>(name, description, runs, shortName, Double::class) {
+class DoubleArgument<T : Call>(name: String, description: String = "", default: Double, runs: T.(Double) -> Unit, shortName: String) :
+    Argument<Double, T>(name, description, runs, shortName, default, Double::class) {
     override fun parseValue(string: String): Double {
         try {
             return string.toDouble()
