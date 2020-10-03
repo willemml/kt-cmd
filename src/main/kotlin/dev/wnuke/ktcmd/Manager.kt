@@ -4,7 +4,7 @@ open class CommandManager<T : Call>(val prefix: String = "") {
     private val commands = HashMap<String, Command<T>>()
 
     val helpCommand: Command<T> = Command("help", "Lists commands and gets the help/usage text for a command.", arrayListOf("h, ?")) {
-        val commandName = getOptionalArgument<String>("command")
+        val commandName = getAnyArgument<String>("command")
         if (commandName != null) {
             val command = commands[commandName]
             if (command != null) {
