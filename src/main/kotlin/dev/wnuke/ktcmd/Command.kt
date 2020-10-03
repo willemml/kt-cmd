@@ -1,9 +1,18 @@
 package dev.wnuke.ktcmd
 
 open class Command<T : Call>(
+    /**
+     * Name of the command, is automatically appended to [aliases]
+     */
     val name: String,
     val description: String = "",
+    /**
+     * Strings that can be used to call the command
+     */
     val aliases: ArrayList<String> = ArrayList(),
+    /**
+     * What to do when the command is run
+     */
     val runs: Command<T>.(T) -> Unit
 ) {
     val arguments = HashMap<String, Triple<Argument<*, T>, Boolean, Any?>>()
@@ -12,10 +21,19 @@ open class Command<T : Call>(
         aliases.add(name)
     }
 
+    /**
+     * Adds this command to a command [manager]
+     */
     fun addToManager(manager: CommandManager<T>) {
         manager.addCommand(this)
     }
 
+    /**
+     * Adds a String argument to the command with [name],
+     * whether or not it is [required], a [description], a [shortName] to make the argument easier to use,
+     * a [default] value and an execute block ([runs])
+     * @throws IllegalArgumentException When there is an error in the code using this
+     */
     @Throws(IllegalArgumentException::class)
     fun string(
         name: String,
@@ -27,10 +45,20 @@ open class Command<T : Call>(
     ): Command<T> {
         val nameProcessed = name.trim().replace(' ', '_')
         if (arguments.containsKey(nameProcessed)) throw IllegalArgumentException("There is already an argument called $name.")
-        arguments[nameProcessed] = Triple(StringArgument(nameProcessed, description, default, runs, shortName.trim().replace(' ', '_')), required, null)
+        arguments[nameProcessed] = Triple(
+            StringArgument(nameProcessed, description, default, runs, shortName.trim().replace(' ', '_')),
+            required,
+            null
+        )
         return this
     }
 
+    /**
+     * Adds an Integer argument to the command with [name],
+     * whether or not it is [required], a [description], a [shortName] to make the argument easier to use,
+     * a [default] value and an execute block ([runs])
+     * @throws IllegalArgumentException When there is an error in the code using this
+     */
     @Throws(IllegalArgumentException::class)
     fun integer(
         name: String,
@@ -42,10 +70,20 @@ open class Command<T : Call>(
     ): Command<T> {
         val nameProcessed = name.trim().replace(' ', '_')
         if (arguments.containsKey(nameProcessed)) throw IllegalArgumentException("There is already an argument called $name.")
-        arguments[nameProcessed] = Triple(IntArgument(nameProcessed, description, default, runs, shortName.trim().replace(' ', '_')), required, null)
+        arguments[nameProcessed] = Triple(
+            IntArgument(nameProcessed, description, default, runs, shortName.trim().replace(' ', '_')),
+            required,
+            null
+        )
         return this
     }
 
+    /**
+     * Adds a Long argument to the command with [name],
+     * whether or not it is [required], a [description], a [shortName] to make the argument easier to use,
+     * a [default] value and an execute block ([runs])
+     * @throws IllegalArgumentException When there is an error in the code using this
+     */
     @Throws(IllegalArgumentException::class)
     fun long(
         name: String,
@@ -57,10 +95,20 @@ open class Command<T : Call>(
     ): Command<T> {
         val nameProcessed = name.trim().replace(' ', '_')
         if (arguments.containsKey(nameProcessed)) throw IllegalArgumentException("There is already an argument called $name.")
-        arguments[nameProcessed] = Triple(LongArgument(nameProcessed, description, default, runs, shortName.trim().replace(' ', '_')), required, null)
+        arguments[nameProcessed] = Triple(
+            LongArgument(nameProcessed, description, default, runs, shortName.trim().replace(' ', '_')),
+            required,
+            null
+        )
         return this
     }
 
+    /**
+     * Adds a Float argument to the command with [name],
+     * whether or not it is [required], a [description], a [shortName] to make the argument easier to use,
+     * a [default] value and an execute block ([runs])
+     * @throws IllegalArgumentException When there is an error in the code using this
+     */
     @Throws(IllegalArgumentException::class)
     fun float(
         name: String,
@@ -72,10 +120,20 @@ open class Command<T : Call>(
     ): Command<T> {
         val nameProcessed = name.trim().replace(' ', '_')
         if (arguments.containsKey(nameProcessed)) throw IllegalArgumentException("There is already an argument called $name.")
-        arguments[nameProcessed] = Triple(FloatArgument(nameProcessed, description, default, runs, shortName.trim().replace(' ', '_')), required, null)
+        arguments[nameProcessed] = Triple(
+            FloatArgument(nameProcessed, description, default, runs, shortName.trim().replace(' ', '_')),
+            required,
+            null
+        )
         return this
     }
 
+    /**
+     * Adds an= Double argument to the command with [name],
+     * whether or not it is [required], a [description], a [shortName] to make the argument easier to use,
+     * a [default] value and an execute block ([runs])
+     * @throws IllegalArgumentException When there is an error in the code using this
+     */
     @Throws(IllegalArgumentException::class)
     fun double(
         name: String,
@@ -87,10 +145,18 @@ open class Command<T : Call>(
     ): Command<T> {
         val nameProcessed = name.trim().replace(' ', '_')
         if (arguments.containsKey(nameProcessed)) throw IllegalArgumentException("There is already an argument called $name.")
-        arguments[nameProcessed] = Triple(DoubleArgument(nameProcessed, description, default, runs, shortName.trim().replace(' ', '_')), required, null)
+        arguments[nameProcessed] = Triple(
+            DoubleArgument(nameProcessed, description, default, runs, shortName.trim().replace(' ', '_')),
+            required,
+            null
+        )
         return this
     }
 
+    /**
+     * Check if [string] matches any of the commands aliases/names
+     * @return Whether or not it matches
+     */
     fun matches(string: String): Boolean {
         for (alias in aliases) {
             if (string.startsWith("$alias ") || string == alias) return true
@@ -98,8 +164,21 @@ open class Command<T : Call>(
         return false
     }
 
+    /**
+     * Cached value of the commands help message for performance, can be cleared by setting to ""
+     */
     var helpCache = ""
 
+    /**
+     * Gets the help text for this command, with a format of:
+     * [name]: [description]
+     * Required Arguments:
+     *   [argName]: [argDescription]
+     * Optional Arguments:
+     *   [argName]: [argDescription]
+     *
+     * @return The previous as a formatted String using newlines as line breaks
+     */
     open fun helpText(): String {
         if (helpCache.isEmpty()) {
             val required = HashMap<String, String>()
@@ -123,6 +202,11 @@ open class Command<T : Call>(
         return helpCache
     }
 
+    /**
+     * Execute the command with [call], parses arguments, executes per argument execute blocks and executes the main execute block
+     * @throws IllegalArgumentException When there is an issue with the code implementing this class
+     * @throws RuntimeCommandSyntaxError When a supplied value for an argument is of the wrong type or when an argument is missing
+     */
     @Throws(RuntimeCommandSyntaxError::class, IllegalArgumentException::class)
     fun execute(call: T) {
         var argumentString = ""
@@ -160,6 +244,9 @@ open class Command<T : Call>(
         run(call)
     }
 
+    /**
+     * Runs the execute block of the command with [call] and the argument's meta in [argument]
+     */
     open fun <S> runArgument(call: T, argument: Triple<Argument<*, T>, Boolean, S>) {
         if (argument.third != null) {
             if (argument.first.type == argument.third!!::class) {
@@ -168,28 +255,54 @@ open class Command<T : Call>(
         }
     }
 
-    @Throws(IllegalArgumentException::class)
+    /**
+     * Runs the execute block of the command with [call]
+     * @throws IllegalArgumentException When there is an issue with the code implementing this class
+     * @throws RuntimeCommandSyntaxError When a supplied value for an argument is of the wrong type or when an argument is missing
+     */
+    @Throws(IllegalArgumentException::class, RuntimeCommandSyntaxError::class)
     open fun run(call: T) {
         runs.invoke(this, call)
     }
 
+    /**
+     * Parses [string] to get the value of type [U] for the argument [arg]
+     * @return The parsed value of [string] as [U]
+     * @throws RuntimeCommandSyntaxError when the argument value given by the user is of the wrong type
+     */
     @Throws(RuntimeCommandSyntaxError::class)
     fun <U, S : Argument<U, T>> parseArgument(string: String, arg: S): U {
         return arg.parse(string)
     }
 
+    /**
+     * Gets parsed argument with name [string] with type [T], returning null unless [useDefault] is true in which case it returns [string]'s default value
+     * @return The parsed value of the argument, the default value or null depending on the arguments
+     * @throws IllegalArgumentException when the wrong type is specified in the code or the argument was never created in the project code
+     */
     @Throws(IllegalArgumentException::class)
     inline fun <reified T> getAnyArgument(string: String, useDefault: Boolean = false): T? {
         val argument = arguments[string] ?: throw IllegalArgumentException("$string is not an argument of $name.")
-        val value = argument.third ?: return if (useDefault && argument.first.default is T) argument.first.default as T else null
+        val value = argument.third
+            ?: return if (useDefault && argument.first.default is T) argument.first.default as T else null
         if (value is T) return value
         throw IllegalArgumentException("Argument $string of $name is not of type ${T::class.simpleName}.")
     }
 
+
+    /**
+     * Gets optional argument [string] of type [T], always returning default if otherwise null, uses [getAnyArgument]
+     * @return The parsed value of the argument or the default value
+     */
     @Throws(IllegalArgumentException::class)
     inline fun <reified T> getOptionalArgument(string: String): T = getAnyArgument(string, true)!!
 
-    @Throws(IllegalArgumentException::class)
+    /**
+     * Gets required argument [string] of type [T] using [getAnyArgument]
+     * @return The parsed value of the argument
+     * @throws RuntimeCommandSyntaxError when the argument is missing
+     */
+    @Throws(IllegalArgumentException::class, RuntimeCommandSyntaxError::class)
     inline fun <reified T> getArgument(string: String): T {
         return getAnyArgument(string, false) ?: throw RuntimeCommandSyntaxError("Argument $string is missing.")
     }
