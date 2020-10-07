@@ -13,6 +13,7 @@ fun main() {
     val testCommandOne = Command<Message>("testOne", "Test for commands with optional arguments only.", arrayListOf("t")) {
         println("$name: $description")
         getAnyArgument<String>("str")?.let { println("string test: $it") }
+        getAnyArgument<Boolean>("bool")?.let { println("boolean test: $it") }
         getAnyArgument<Int>("int")?.let { println("int test: $it") }
         getAnyArgument<Long>("long")?.let { println("long test: $it") }
         getAnyArgument<Float>("float")?.let { println("float test: $it") }
@@ -25,6 +26,7 @@ fun main() {
         println("Test one success!")
     }.apply {
         string("str", false, "An optional string argument for testing", "s")
+        boolean("bool", false, "An optional boolean argument for testing", "b")
         integer("int", false, "An optional integer argument for testing", "i")
         long("long", false, "An optional long argument for testing", "l")
         float("float", false, "An optional float argument for testing", "f")
@@ -34,6 +36,7 @@ fun main() {
     val testCommandTwo = Command<Message>("testTwo", "Test for commands with required arguments, also tests argument types.") {
         println("$name: $description")
         println("string: ${getArgument<String>("str")}")
+        println("boolean: ${getArgument<Boolean>("bool")}")
         println("int: ${getArgument<Int>("int")}")
         println("long: ${getArgument<Long>("long")}")
         println("float: ${getArgument<Float>("float")}")
@@ -46,6 +49,7 @@ fun main() {
         println("Test two success!")
     }.apply {
         string("str", true, "A required string argument for testing", "s")
+        boolean("bool", true, "A required boolean argument for testing", "b")
         integer("int", true, "A required integer argument for testing", "i")
         long("long", true, "A required long argument for testing", "l")
         float("float", true, "A required float argument for testing", "f")
@@ -61,17 +65,20 @@ fun main() {
 
     val testCommandThree = Command<Message>("testThree", "Test for commands with required and optional arguments, default arguments used and used for help test.") {
         println("default val for string: ${getOptionalArgument<String>("optstr")}")
+        println("default val for boolean: ${getOptionalArgument<Boolean>("optbool")}")
         println("default val for int: ${getOptionalArgument<Int>("optint")}")
         println("default val for long: ${getOptionalArgument<Long>("optlong")}")
         println("default val for float: ${getOptionalArgument<Float>("optfloat")}")
         println("default val for double: ${getOptionalArgument<Double>("optdouble")}")
     }.apply {
         string("optstr", false, "An optional string argument for testing", "os", "This is the defualt value of this argument.")
-        integer("optint", false, "An optional integer argument for testing", "oi")
+        boolean("optbool", false, "An optional boolean argument for testing", "ob", true)
+        integer("optint", false, "An optional integer argument for testing", "oi", 111)
         long("optlong", false, "An optional long argument for testing", "ol", 4211)
-        float("optfloat", false, "An optional float argument for testing", "of")
+        float("optfloat", false, "An optional float argument for testing", "of", 11.02F)
         double("optdouble", false, "An optional double argument for testing", "od", 0.0112)
         string("reqstr", true, "A required string argument for testing", "rs")
+        boolean("reqbool", true, "A required boolean argument for testing", "rb")
         integer("reqint", true, "A required integer argument for testing", "ri")
         long("reqlong", true, "A required long argument for testing", "rl")
         float("reqfloat", true, "A required float argument for testing", "rf")
@@ -91,18 +98,18 @@ fun main() {
     manager.runCommand(Message("testOne --str \"Test, with spaces!\""))
     println("\nsome > testOne")
     manager.runCommand(Message("testOne --str test -i 42"))
-    println("\nall > testOne --str test -i 42 -l=64 --float=3.2 --double 57.33")
-    manager.runCommand(Message("testOne --str test -i 42 -l=64 --float=3.2 --double 57.33"))
+    println("\nall > testOne --str test -i 42 --bool true -l=64 --float=3.2 --double 57.33")
+    manager.runCommand(Message("testOne --str test -i 42 --bool true -l=64 --float=3.2 --double 57.33"))
     println("\nArguments, required:\nnone > testTwo")
     manager.runCommand(Message("testTwo"))
     println("\nsome > testTwo -s test")
     manager.runCommand(Message("testOne --str test -i 42"))
-    println("\nall > testTwo --str test -i 42 -l=64 --float=3.2 --double 57.33")
-    manager.runCommand(Message("testTwo --str test -i 42 -l=64 --float=3.2 --double 57.33"))
+    println("\nall > testTwo --str test -b true -i 42 -l=64 --float=3.2 --double 57.33")
+    manager.runCommand(Message("testTwo --str test -b true -i 42 -l=64 --float=3.2 --double 57.33"))
     println("\nWrong type\n> testOne -i test")
     manager.runCommand(Message("testOne -i test"))
-    println("\nDefault\n> testThree -rs t -ri 0 -rl 0 -rf 0.0 -rd 0.0")
-    manager.runCommand(Message("testThree -rs t -ri 0 -rl 0 -rf 0.0 -rd 0.0"))
+    println("\nDefault\n> testThree -rs t -rb false -ri 0 -rl 0 -rf 0.0 -rd 0.0")
+    manager.runCommand(Message("testThree -rs t -rb false -ri 0 -rl 0 -rf 0.0 -rd 0.0"))
     println("\n\n====== Testing help command ======\nWithout arguments:\n> help")
     manager.runCommand(Message("help"))
     println("\nARGUMENT FORMATS:\n> help --command testZero")

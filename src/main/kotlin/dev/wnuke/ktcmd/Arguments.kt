@@ -66,6 +66,14 @@ class StringArgument<T : Call>(name: String, description: String = "", default: 
 }
 
 /**
+ * Argument with type Boolean
+ */
+class BooleanArgument<T : Call>(name: String, description: String = "", default: Boolean, runs: T.(Boolean) -> Unit, shortName: String) :
+    Argument<Boolean, T>(name, description, runs, shortName, default, Boolean::class) {
+    override fun parseValue(string: String): Boolean = string.toBoolean()
+}
+
+/**
  * Argument with type Int
  */
 class IntArgument<T : Call>(name: String, description: String = "", default: Int, runs: T.(Int) -> Unit, shortName: String) :

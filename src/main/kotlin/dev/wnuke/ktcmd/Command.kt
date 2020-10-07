@@ -54,6 +54,31 @@ open class Command<T : Call>(
     }
 
     /**
+     * Adds a Boolean argument to the command with [name],
+     * whether or not it is [required], a [description], a [shortName] to make the argument easier to use,
+     * a [default] value and an execute block ([runs])
+     * @throws IllegalArgumentException When there is an error in the code using this
+     */
+    @Throws(IllegalArgumentException::class)
+    fun boolean(
+        name: String,
+        required: Boolean = true,
+        description: String = "",
+        shortName: String = "",
+        default: Boolean = false,
+        runs: T.(Boolean) -> Unit = {}
+    ): Command<T> {
+        val nameProcessed = name.trim().replace(' ', '_')
+        if (arguments.containsKey(nameProcessed)) throw IllegalArgumentException("There is already an argument called $name.")
+        arguments[nameProcessed] = Triple(
+            BooleanArgument(nameProcessed, description, default, runs, shortName.trim().replace(' ', '_')),
+            required,
+            null
+        )
+        return this
+    }
+
+    /**
      * Adds an Integer argument to the command with [name],
      * whether or not it is [required], a [description], a [shortName] to make the argument easier to use,
      * a [default] value and an execute block ([runs])
@@ -291,7 +316,7 @@ open class Command<T : Call>(
 
 
     /**
-     * Gets optional argument [string] of type [T], always returning default if otherwise null, uses [getAnyArgument]
+     * Gets optional argument [string] of type [T], always returning default if otherwise null, shorthand for [getAnyArgument] with "useDefault" set to true
      * @return The parsed value of the argument or the default value
      */
     @Throws(IllegalArgumentException::class)
