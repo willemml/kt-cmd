@@ -260,11 +260,12 @@ open class Command<T : Call>(
         var argumentString = ""
         for (alias in aliases) {
             if (matches(call.callText)) {
-                argumentString = call.callText.removePrefix("$alias ")
+                argumentString = call.callText.removePrefix(alias).removePrefix(" ")
                 break
             }
         }
-        val command = Regex("(?<=\")[^\"]*(?=\")|[^\" ]+").findAll(argumentString).map { it.value }.filter { it.isNotEmpty() }.toMutableList().apply { removeFirst() }
+        val command = Regex("(?<=\")[^\"]*(?=\")|[^\" ]+").findAll(argumentString).map { it.value }.filter { it.isNotEmpty() }.toMutableList()
+        println("command array: $command")
         if (parseUsingOrder) {
             var i = 0
             for (arg in arguments) {
