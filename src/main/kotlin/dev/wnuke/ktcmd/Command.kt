@@ -1,9 +1,8 @@
 package dev.wnuke.ktcmd
 
-import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 import kotlin.collections.HashSet
+import kotlin.collections.LinkedHashMap
 
 open class Command<T : Call>(
     /**
@@ -226,8 +225,8 @@ open class Command<T : Call>(
      */
     open fun helpText(): String {
         if (helpCache.isEmpty()) {
-            val required = HashMap<String, String>()
-            val optional = HashMap<String, String>()
+            val required = LinkedHashMap<String, String>()
+            val optional = LinkedHashMap<String, String>()
             for (arg in arguments) {
                 val argNameString =
                     if (parseUsingOrder) "- ${arg.key} (${arg.value.first.type.simpleName})"
