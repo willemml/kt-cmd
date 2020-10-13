@@ -13,7 +13,12 @@ open class Command<T : Call>(
     /**
      * What to do when the command is run
      */
-    val runs: Command<T>.(T) -> Unit
+    val runs: Command<T>.(T) -> Unit,
+    /**
+     * If true only required arguments can be used and the must be given in order when the command is used
+     * When true arguments do not require or look for their prefixes (--argname or -a) and instead parse each string in order
+     */
+    val parseUsingOrder: Boolean = false
 ) {
     val arguments = HashMap<String, Triple<Argument<*, T>, Boolean, Any?>>()
 
@@ -43,6 +48,7 @@ open class Command<T : Call>(
         default: String = "",
         runs: T.(String) -> Unit = {}
     ): Command<T> {
+        if (!required && parseUsingOrder) throw IllegalArgumentException("Argument $name of command ${this.name} cannot have an optional argument when parseUsingOrder is true.")
         val nameProcessed = name.trim().replace(' ', '_')
         if (arguments.containsKey(nameProcessed)) throw IllegalArgumentException("There is already an argument called $name.")
         arguments[nameProcessed] = Triple(
@@ -68,6 +74,7 @@ open class Command<T : Call>(
         default: Boolean = false,
         runs: T.(Boolean) -> Unit = {}
     ): Command<T> {
+        if (!required && parseUsingOrder) throw IllegalArgumentException("Argument $name of command ${this.name} cannot have an optional argument when parseUsingOrder is true.")
         val nameProcessed = name.trim().replace(' ', '_')
         if (arguments.containsKey(nameProcessed)) throw IllegalArgumentException("There is already an argument called $name.")
         arguments[nameProcessed] = Triple(
@@ -93,6 +100,7 @@ open class Command<T : Call>(
         default: Int = -1,
         runs: T.(Int) -> Unit = {}
     ): Command<T> {
+        if (!required && parseUsingOrder) throw IllegalArgumentException("Argument $name of command ${this.name} cannot have an optional argument when parseUsingOrder is true.")
         val nameProcessed = name.trim().replace(' ', '_')
         if (arguments.containsKey(nameProcessed)) throw IllegalArgumentException("There is already an argument called $name.")
         arguments[nameProcessed] = Triple(
@@ -118,6 +126,7 @@ open class Command<T : Call>(
         default: Long = -1,
         runs: T.(Long) -> Unit = {}
     ): Command<T> {
+        if (!required && parseUsingOrder) throw IllegalArgumentException("Argument $name of command ${this.name} cannot have an optional argument when parseUsingOrder is true.")
         val nameProcessed = name.trim().replace(' ', '_')
         if (arguments.containsKey(nameProcessed)) throw IllegalArgumentException("There is already an argument called $name.")
         arguments[nameProcessed] = Triple(
@@ -143,6 +152,7 @@ open class Command<T : Call>(
         default: Float = -1.0F,
         runs: T.(Float) -> Unit = {}
     ): Command<T> {
+        if (!required && parseUsingOrder) throw IllegalArgumentException("Argument $name of command ${this.name} cannot have an optional argument when parseUsingOrder is true.")
         val nameProcessed = name.trim().replace(' ', '_')
         if (arguments.containsKey(nameProcessed)) throw IllegalArgumentException("There is already an argument called $name.")
         arguments[nameProcessed] = Triple(
@@ -154,7 +164,7 @@ open class Command<T : Call>(
     }
 
     /**
-     * Adds an= Double argument to the command with [name],
+     * Adds a Double argument to the command with [name],
      * whether or not it is [required], a [description], a [shortName] to make the argument easier to use,
      * a [default] value and an execute block ([runs])
      * @throws IllegalArgumentException When there is an error in the code using this
@@ -168,6 +178,7 @@ open class Command<T : Call>(
         default: Double = -1.0,
         runs: T.(Double) -> Unit = {}
     ): Command<T> {
+        if (!required && parseUsingOrder) throw IllegalArgumentException("Argument $name of command ${this.name} cannot have an optional argument when parseUsingOrder is true.")
         val nameProcessed = name.trim().replace(' ', '_')
         if (arguments.containsKey(nameProcessed)) throw IllegalArgumentException("There is already an argument called $name.")
         arguments[nameProcessed] = Triple(
@@ -202,6 +213,10 @@ open class Command<T : Call>(
      *   Optional Arguments:
      *     prefix [shortPrefix] (type): Description of optional argument
      *
+     * or if [parseUsingOrder] is enabled:
+     * name: Description of command.
+     *   Arguments:
+     *
      * @return The previous as a formatted String using newlines as line breaks
      */
     open fun helpText(): String {
@@ -215,7 +230,7 @@ open class Command<T : Call>(
                 else optional[argNameString] = arg.value.first.description
             }
             helpCache = "$name: $description"
-            if (required.isNotEmpty()) helpCache += "\n Required Arguments:"
+            if (required.isNotEmpty()) helpCache += if (parseUsingOrder) "\n Arguments:" else "\n Required Arguments:"
             for ((name, description) in required) {
                 helpCache += "\n  $name: $description"
             }
