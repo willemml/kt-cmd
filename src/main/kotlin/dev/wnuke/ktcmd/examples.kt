@@ -154,9 +154,9 @@ fun main() {
     println("\n> help -c testTwo")
     manager.runCommand(Message("help -c testTwo"))
     println("\n> help -c=testThree")
-    manager.runCommand(Message("help -c testFour"))
+    manager.runCommand(Message("help -c testThree"))
     println("\n> help -c testFour")
-    manager.runCommand(Message("help -c=testThree"))
+    manager.runCommand(Message("help -c=testFour"))
     println("\nWith non existent command as argument:\n> help --command invalid")
     manager.runCommand(Message("help --command invalid"))
 }

@@ -265,7 +265,6 @@ open class Command<T : Call>(
             }
         }
         val command = Regex("(?<=\")[^\"]*(?=\")|[^\" ]+").findAll(argumentString).map { it.value }.filter { it.isNotEmpty() }.toMutableList()
-        println("command array: $command")
         if (parseUsingOrder) {
             var i = 0
             for (arg in arguments) {
