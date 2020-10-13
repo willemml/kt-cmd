@@ -84,8 +84,37 @@ fun main() {
         float("reqfloat", true, "A required float argument for testing", "rf")
         double("reqdouble", true, "A required double argument for testing", "rd")
     }
+    val testCommandFour = Command<Message>("testFour", "Test for commands with required arguments, also tests argument types.", arrayListOf(), true) {
+        println("$name: $description")
+        println("string: ${getArgument<String>("str")}")
+        println("boolean: ${getArgument<Boolean>("bool")}")
+        println("int: ${getArgument<Int>("int")}")
+        println("long: ${getArgument<Long>("long")}")
+        println("float: ${getArgument<Float>("float")}")
+        println("double: ${getArgument<Double>("double")}")
+        try {
+            println("float as int: ${getArgument<Float>("float")}")
+        } catch (e: IllegalArgumentException) {
+            println("Invalid getArgument type test success")
+        }
+        println("Test four success!")
+    }.apply {
+        string("str", true, "A string argument for testing")
+        boolean("bool", true, "A boolean argument for testing")
+        integer("int", true, "A integer argument for testing")
+        long("long", true, "A long argument for testing")
+        float("float", true, "A float argument for testing")
+        double("double", true, "A double argument for testing")
 
-    manager.loadCommands(arrayOf(testCommandZero, testCommandOne, testCommandTwo, testCommandThree))
+        try {
+            string("str", true, "s")
+        } catch (e: IllegalArgumentException) {
+            println("Duplicate argument error check complete.")
+        }
+        println("All arguments registered.")
+    }
+
+    manager.loadCommands(arrayOf(testCommandZero, testCommandOne, testCommandTwo, testCommandThree, testCommandFour))
     println("\n====== Testing argument parsing ======\nAliases:\n> 0")
     manager.runCommand(Message("0"))
     println("\n> t")
@@ -110,6 +139,12 @@ fun main() {
     manager.runCommand(Message("testOne -i test"))
     println("\nDefault\n> testThree -rs t -rb false -ri 0 -rl 0 -rf 0.0 -rd 0.0")
     manager.runCommand(Message("testThree -rs t -rb false -ri 0 -rl 0 -rf 0.0 -rd 0.0"))
+    println("\nOrdered parsing:\nall > testFour test true 42 64 3.2 57.33")
+    manager.runCommand(Message("testFour test true 42 64 3.2 57.33"))
+    println("\nsome > testFour test true 42 64")
+    manager.runCommand(Message("testFour test true 42 64"))
+    println("\nnone > testFour")
+    manager.runCommand(Message("testFour"))
     println("\n\n====== Testing help command ======\nWithout arguments:\n> help")
     manager.runCommand(Message("help"))
     println("\nARGUMENT FORMATS:\n> help --command testZero")
@@ -119,6 +154,8 @@ fun main() {
     println("\n> help -c testTwo")
     manager.runCommand(Message("help -c testTwo"))
     println("\n> help -c=testThree")
+    manager.runCommand(Message("help -c testFour"))
+    println("\n> help -c testFour")
     manager.runCommand(Message("help -c=testThree"))
     println("\nWith non existent command as argument:\n> help --command invalid")
     manager.runCommand(Message("help --command invalid"))

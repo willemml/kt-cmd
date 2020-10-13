@@ -1,5 +1,10 @@
 package dev.wnuke.ktcmd
 
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
+import kotlin.collections.HashSet
+
 open class Command<T : Call>(
     /**
      * Name of the command, is automatically appended to [aliases]
@@ -11,16 +16,16 @@ open class Command<T : Call>(
      */
     val aliases: ArrayList<String> = ArrayList(),
     /**
-     * What to do when the command is run
-     */
-    val runs: Command<T>.(T) -> Unit,
-    /**
      * If true only required arguments can be used and the must be given in order when the command is used
      * When true arguments do not require or look for their prefixes (--argname or -a) and instead parse each string in order
      */
-    val parseUsingOrder: Boolean = false
+    val parseUsingOrder: Boolean = false,
+    /**
+     * What to do when the command is run
+     */
+    val runs: Command<T>.(T) -> Unit
 ) {
-    val arguments = HashMap<String, Triple<Argument<*, T>, Boolean, Any?>>()
+    val arguments = LinkedHashMap<String, Triple<Argument<*, T>, Boolean, Any?>>()
 
     init {
         aliases.add(name)
@@ -225,18 +230,22 @@ open class Command<T : Call>(
             val optional = HashMap<String, String>()
             for (arg in arguments) {
                 val argNameString =
-                    "--${arg.key} [${if (arg.value.first.shortName.isNotEmpty()) arg.value.first.shortPrefix else ""}] (${arg.value.first.type.simpleName})"
+                    if (parseUsingOrder) "- ${arg.key} (${arg.value.first.type.simpleName})"
+                    else "--${arg.key} [${if (arg.value.first.shortName.isNotEmpty()) arg.value.first.shortPrefix else ""}] (${arg.value.first.type.simpleName})"
                 if (arg.value.second) required[argNameString] = arg.value.first.description
                 else optional[argNameString] = arg.value.first.description
             }
             helpCache = "$name: $description"
-            if (required.isNotEmpty()) helpCache += if (parseUsingOrder) "\n Arguments:" else "\n Required Arguments:"
+            if (required.isNotEmpty()) helpCache += if (parseUsingOrder) "\n  Arguments:" else "\n  Required Arguments:"
             for ((name, description) in required) {
-                helpCache += "\n  $name: $description"
+                helpCache += "\n    $name: $description"
             }
-            if (optional.isNotEmpty()) helpCache += "\n Optional Arguments:"
+            if (optional.isNotEmpty()) helpCache += "\n  Optional Arguments:"
             for ((name, description) in optional) {
-                helpCache += "\n  $name: $description"
+                helpCache += "\n    $name: $description"
+            }
+            if (parseUsingOrder) {
+                helpCache += "\n  Format: $name ${arguments.entries.joinToString("") { "<${it.key}> " }}"
             }
         }
         return helpCache
@@ -256,28 +265,43 @@ open class Command<T : Call>(
                 break
             }
         }
-        val command = Regex("(?<=\")[^\"]*(?=\")|[^\" ]+").findAll(argumentString).map { it.value }.toMutableList()
-        val argsDone = HashSet<String>()
-        for (arg in command) {
-            for ((name, argument) in arguments.filter { !argsDone.contains(it.key) }) {
-                arguments[name] = Triple(argument.first, argument.second, null)
-                if (argument.first.matches(arg)) {
-                    val parsed: Any? =
-                        if (argument.first.prefixOnly(arg)) if (arg != command.last()) parseArgument(
-                            command.elementAt(
-                                command.indexOf(arg) + 1
-                            ), argument.first
-                        )!!
-                        else null
-                        else parseArgument(arg, argument.first)
-                    if (argument.second && parsed == null) throw RuntimeCommandSyntaxError("Argument $name of ${this.name} requires a value.")
-                    val argumentParsed = Triple(argument.first, argument.second, parsed)
-                    arguments[name] = argumentParsed
+        val command = Regex("(?<=\")[^\"]*(?=\")|[^\" ]+").findAll(argumentString).map { it.value }.filter { it.isNotEmpty() }.toMutableList().apply { removeFirst() }
+        if (parseUsingOrder) {
+            var i = 0
+            for (arg in arguments) {
+                if (command.size > i) {
+                    val parsed: Any? = parseArgument(command[i], arg.value.first)
+                    val argumentParsed = Triple(arg.value.first, arg.value.second, parsed)
+                    arguments[arg.key] = argumentParsed
                     if (parsed != null) {
                         runArgument(call, argumentParsed)
                     }
-                    argsDone.add(name)
-                    break
+                    i++
+                } else throw RuntimeCommandSyntaxError("Argument ${arg.key} of ${this.name} is missing.")
+            }
+        } else {
+            val argsDone = HashSet<String>()
+            for (arg in command) {
+                for ((name, argument) in arguments.filter { !argsDone.contains(it.key) }) {
+                    arguments[name] = Triple(argument.first, argument.second, null)
+                    if (argument.first.matches(arg)) {
+                        val parsed: Any? =
+                            if (argument.first.prefixOnly(arg)) if (arg != command.last()) parseArgument(
+                                command.elementAt(
+                                    command.indexOf(arg) + 1
+                                ), argument.first
+                            )!!
+                            else null
+                            else parseArgument(arg, argument.first)
+                        if (argument.second && parsed == null) throw RuntimeCommandSyntaxError("Argument $name of ${this.name} requires a value.")
+                        val argumentParsed = Triple(argument.first, argument.second, parsed)
+                        arguments[name] = argumentParsed
+                        if (parsed != null) {
+                            runArgument(call, argumentParsed)
+                        }
+                        argsDone.add(name)
+                        break
+                    }
                 }
             }
         }
