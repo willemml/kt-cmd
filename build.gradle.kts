@@ -3,7 +3,7 @@ plugins {
     application
     `maven-publish`
 }
-group = "dev.wnuke"
+group = "net.willemml"
 version = "1.2.2"
 
 repositories {
@@ -15,7 +15,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 }
 
 application {
-    mainClassName = "dev.wnuke.ktcmd.ExamplesKt"
+    mainClassName = "net.willemml.ktcmd.ExamplesKt"
 }
 
 publishing {

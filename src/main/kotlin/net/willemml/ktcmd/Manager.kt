@@ -1,4 +1,4 @@
-package dev.wnuke.ktcmd
+package net.willemml.ktcmd
 
 /**
  * A command manager for easily getting started

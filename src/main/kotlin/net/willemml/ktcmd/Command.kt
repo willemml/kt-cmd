@@ -1,4 +1,4 @@
-package dev.wnuke.ktcmd
+package net.willemml.ktcmd
 
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet

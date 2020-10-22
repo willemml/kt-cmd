@@ -1,4 +1,4 @@
-package dev.wnuke.ktcmd
+package net.willemml.ktcmd
 
 val manager = CommandManager<Message>()
 
