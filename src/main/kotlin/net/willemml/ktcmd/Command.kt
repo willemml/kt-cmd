@@ -266,7 +266,7 @@ open class Command<T : Call>(
         }
         val command = Regex("(?<=\")[^\"]*(?=\")|[^\" ]+").findAll(argumentString).map { it.value }.filter { it.isNotEmpty() }.toMutableList()
         if (parseUsingOrder) {
-            var i = 1
+            var i = 0
             for (arg in arguments) {
                 if (command.size > i) {
                     val parsed: Any? = parseArgument(command[i], arg.value.first)
