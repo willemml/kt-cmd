@@ -19,12 +19,12 @@ open class CommandManager<T : Call>(
         if (commandName != null) {
             val command = commands[commandName]
             if (command != null) {
-                it.info(command.helpText())
+                it.respond(command.helpText())
             } else {
                 it.error("No command with name $commandName.")
             }
         } else {
-            it.info(listCommands())
+            it.respond(listCommands())
         }
     }
 
@@ -71,7 +71,7 @@ open class CommandManager<T : Call>(
                     command.execute(call)
                 } catch (e: RuntimeCommandSyntaxError) {
                     e.message?.let { call.error(it) }
-                    call.info(command.helpText())
+                    call.respond(command.helpText())
                 }
                 return
             }
